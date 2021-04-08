@@ -1,0 +1,32 @@
+// @no-log
+// somehow this does not work anymore, so for i cannot find the reason for that
+POST http://localhost:8080/transactions
+Content-Type: application/xml
+
+<transaction>
+    <reference>test</reference>
+    <amount>100</amount>
+    <userId>myTest</userId>
+</transaction>
+
+###
+// @no-log
+POST http://localhost:8080/transactions
+Accept: application/json
+Content-Type: application/json
+
+{ "reference": "anotherTest", "amount": 150.54, "userId": "test" }
+
+> {%
+client.global.set( 'transaction-id', response.body[ 'id' ] );
+ %}
+
+###
+// @no-log
+GET http://localhost:8080/transactions
+Accept: application/xml
+
+###
+// @no-log
+GET http://localhost:8080/transactions/find?id={{transaction-id}}
+Accept: application/json
