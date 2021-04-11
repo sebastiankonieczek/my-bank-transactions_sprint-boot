@@ -55,4 +55,19 @@ public class TransactionDto
    {
       return receivingUserId;
    }
+
+   public void setReference( String reference )
+   {
+      this.reference = reference;
+   }
+
+   public void setAmount( BigDecimal amount )
+   {
+      this.amount = amount;
+   }
+
+   public void setReceivingUserId( String receivingUserId )
+   {
+      this.receivingUserId = receivingUserId;
+   }
 }

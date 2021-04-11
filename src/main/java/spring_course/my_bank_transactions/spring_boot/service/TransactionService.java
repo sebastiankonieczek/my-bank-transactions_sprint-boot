@@ -1,96 +1,47 @@
 package spring_course.my_bank_transactions.spring_boot.service;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import spring_course.my_bank_transactions.spring_boot.model.Account;
 import spring_course.my_bank_transactions.spring_boot.model.Transaction;
+import spring_course.my_bank_transactions.spring_boot.repository.TransactionRepository;
 
 import java.math.BigDecimal;
-import java.sql.Statement;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
 
 @Component
-public class TransactionService {
+public class TransactionService
+{
    private final String slogan_;
-   private final JdbcTemplate jdbcTemplate_;
+   private final TransactionRepository transactionRepository_;
 
-   public TransactionService( @Value( "${bank.slogan}" ) final String slogan, final JdbcTemplate jdbcTemplate )
+   public TransactionService( @Value( "${bank.slogan}" ) final String slogan, final TransactionRepository transactionRepository )
    {
       slogan_ = slogan;
-      jdbcTemplate_ = jdbcTemplate;
+      transactionRepository_ = transactionRepository;
    }
 
    @Transactional
-   public Transaction find( String id ) {
-      final var transactions = jdbcTemplate_.query( "select * from transaction where id = ?",
-                                             ( resultSet, rowNum ) -> new Transaction( resultSet.getObject( "id" ).toString(),
-                                                                                       resultSet.getTimestamp( "timeStamp" )
-                                                                                                .toLocalDateTime(),
-                                                                                       resultSet.getBigDecimal( "amount" ),
-                                                                                       resultSet.getString( "reference" ),
-                                                                                       slogan_ ),
-                                             id );
-      if( transactions.isEmpty() ) {
-         return null;
-      }
-      return transactions.get( 0 );
-   }
-
-   @Transactional
-   public Transaction create( final Account account, final String reference, final BigDecimal amount ) {
-      final var keyHolder = new GeneratedKeyHolder();
-      final var transactionTime = LocalDateTime.now();
-      jdbcTemplate_.update( connection -> {
-         final var preparedStatement = connection.prepareStatement(
-            "insert into transaction(amount, timeStamp, reference, account_id) values(?,?,?,?)",
-            Statement.RETURN_GENERATED_KEYS );
-
-         preparedStatement.setBigDecimal( 1, amount );
-         preparedStatement.setTimestamp( 2, Timestamp.valueOf( transactionTime ) );
-         preparedStatement.setString( 3, reference );
-         preparedStatement.setString( 4, account.getId() );
-
-         return preparedStatement;
-      }, keyHolder );
-
-      final String id = !Objects.requireNonNull( keyHolder.getKeys() ).isEmpty()
-                        ? keyHolder.getKeys().values().iterator().next().toString()
-                        : null;
-
-
-      return new Transaction( id, transactionTime, amount, reference, slogan_ );
-   }
-
-   @Transactional
-   public Collection< Transaction > getAll()
+   public Transaction find( String id )
    {
-      return jdbcTemplate_.query( "select * from transaction",
-                                  ( resultSet, rowNum ) -> new Transaction( resultSet.getObject( "id" ).toString(),
-                                                                            resultSet.getTimestamp( "timeStamp" )
-                                                                                     .toLocalDateTime(),
-                                                                            resultSet.getBigDecimal( "amount" ),
-                                                                            resultSet.getString( "reference" ),
-                                                                            slogan_ ) );
+      return transactionRepository_.findById( id ).orElse( null );
    }
 
    @Transactional
-   public List< Transaction > findByAccount( final Account account )
+   public Transaction create( final Account account, final String reference, final BigDecimal amount )
    {
-      return jdbcTemplate_.query( "select * from transaction where account_id = ?",
-                                  ( resultSet, rowNum ) -> new Transaction( resultSet.getObject( "id" ).toString(),
-                                                                            resultSet.getTimestamp( "timeStamp" )
-                                                                                     .toLocalDateTime(),
-                                                                            resultSet.getBigDecimal( "amount" ),
-                                                                            resultSet.getString( "reference" ),
-                                                                            slogan_ ),
-                                  account.getId() );
+      return transactionRepository_.save( new Transaction( null,
+                                                           LocalDateTime.now(),
+                                                           amount,
+                                                           reference,
+                                                           slogan_,
+                                                           account.getId() ) );
+   }
 
+   @Transactional
+   public Iterable< Transaction > getAll()
+   {
+      return transactionRepository_.findAll();
    }
 }

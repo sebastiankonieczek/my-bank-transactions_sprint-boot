@@ -14,10 +14,13 @@ import spring_course.my_bank_transactions.spring_boot.service.AccountService;
 import spring_course.my_bank_transactions.spring_boot.service.TransactionService;
 
 import javax.validation.Valid;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @RestController
 @Validated
-public class TransactionController {
+public class TransactionController
+{
 
    private final TransactionService transactionService_;
    private final AccountService accountService_;
@@ -29,12 +32,15 @@ public class TransactionController {
    }
 
    @GetMapping( "/transactions" )
-   public TransactionList getTransactions() {
-      return new TransactionList( transactionService_.getAll() );
+   public TransactionList getTransactions()
+   {
+      return new TransactionList( StreamSupport.stream( transactionService_.getAll().spliterator(), false )
+                                               .collect( Collectors.toUnmodifiableList() ) );
    }
 
    @GetMapping( "/transactions/find" )
-   public Transaction getTransaction( @RequestParam final String id ) {
+   public Transaction getTransaction( @RequestParam final String id )
+   {
       return transactionService_.find( id );
    }
 

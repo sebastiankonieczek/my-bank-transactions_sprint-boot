@@ -11,7 +11,7 @@ create table if not exists transaction
     amount    decimal( 20,2 ),
     timeStamp timestamp( 9 ),
     reference varchar2( 255 ),
+    slogan    varchar2( 255 ),
     account_id uuid,
     foreign key(account_id) references account(id) on DELETE cascade
 )
-

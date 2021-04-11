@@ -15,7 +15,7 @@ POST http://localhost:8080/transactions
 Accept: application/json
 Content-Type: application/json
 
-{ "reference": "anotherTest", "amount": 150.54, "userId": "test" }
+{ "reference": "anotherTest", "amount": 150.54, "userId": "hans" }
 
 > {%
 client.global.set( 'transaction-id', response.body[ 'id' ] );

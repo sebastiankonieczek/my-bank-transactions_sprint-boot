@@ -1,67 +1,39 @@
 package spring_course.my_bank_transactions.spring_boot.service;
 
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import spring_course.my_bank_transactions.spring_boot.model.Account;
+import spring_course.my_bank_transactions.spring_boot.repository.AccountRepository;
 
 import java.math.BigDecimal;
-import java.sql.Statement;
-import java.util.Objects;
+import java.util.Collections;
 
 @Component
 public class AccountService
 {
-   private final JdbcTemplate jdbcTemplate_;
-   private final TransactionService transactionService_;
+   private final AccountRepository accountRepository_;
 
-   public AccountService( final JdbcTemplate jdbcTemplate, final TransactionService transactionService )
+   public AccountService( final AccountRepository accountRepository )
    {
-      jdbcTemplate_ = jdbcTemplate;
-      transactionService_ = transactionService;
+      accountRepository_ = accountRepository;
    }
 
    @Transactional
    public Account supplyAccount( final String userId )
    {
-      final var accounts = jdbcTemplate_.query( "select * from account where user_Id = ?",
-                                                ( resultSet, rowNum ) -> new Account( resultSet.getObject( "id" ).toString(),
-                                                                                      resultSet.getString( "user_id" ),
-                                                                                      resultSet.getBigDecimal( "balance" ) ),
-                                                userId );
-      final var keyHolder = new GeneratedKeyHolder();
+      final var accounts = accountRepository_.findByUserId( userId );
 
-      if( !accounts.isEmpty() ) {
-         final var account = accounts.get( 0 );
-         transactionService_.findByAccount( account ).forEach( account::addTransaction );
-         return account;
+      final var iterator = accounts.iterator();
+      if( iterator.hasNext() ) {
+         return iterator.next();
       }
 
-      jdbcTemplate_.update( connection -> {
-         final var preparedStatement = connection.prepareStatement( "insert into account ( balance, user_id ) values ( ?, ? )",
-                                                                    Statement.RETURN_GENERATED_KEYS );
-         preparedStatement.setBigDecimal( 1, BigDecimal.ZERO );
-         preparedStatement.setString( 2, userId );
-
-         return preparedStatement;
-      }, keyHolder );
-
-      final String id = !Objects.requireNonNull( keyHolder.getKeys() ).isEmpty()
-                        ? keyHolder.getKeys().values().iterator().next().toString()
-                        : null;
-
-      return new Account( id, userId, BigDecimal.ZERO );
+      return accountRepository_.save( new Account( null, userId, BigDecimal.ZERO, Collections.emptyList() ) );
    }
 
    @Transactional
    public void updateBalance( final Account userAccount, final BigDecimal amount )
    {
-      jdbcTemplate_.update( connection -> {
-         final var preparedStatement = connection.prepareStatement( "update ACCOUNT set BALANCE = ? where ID = ?" );
-         preparedStatement.setBigDecimal( 1, userAccount.getBalance().add( amount ) );
-         preparedStatement.setString( 2, userAccount.getId() );
-         return preparedStatement;
-      } );
+      accountRepository_.updateBalance( amount, userAccount.getId() );
    }
 }

@@ -1,44 +1,71 @@
 package spring_course.my_bank_transactions.spring_boot.model;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public class Transaction {
-   private final String id_;
-   private final LocalDateTime timeStamp_;
-   private final BigDecimal amount_;
-   private final String reference_;
-   private final String slogan_;
+@Table( "TRANSACTION" )
+public class Transaction
+{
+   @Id
+   private final String id;
+   @Column( "TIMESTAMP" )
+   private final LocalDateTime timeStamp;
+   @Column( "AMOUNT" )
+   private final BigDecimal amount;
+   @Column( "REFERENCE" )
+   private final String reference;
+   @Column( "SLOGAN" )
+   private final String slogan;
+   @Column( "ACCOUNT_ID" )
+   private final String accountId;
 
-   public Transaction( final String id,
-                       final LocalDateTime timeStamp,
-                       final BigDecimal amount,
-                       final String reference,
-                       final String slogan ) {
-      id_ = id;
-      timeStamp_ = timeStamp;
-      amount_ = amount;
-      reference_ = reference;
-      slogan_ = slogan;
+   public Transaction(
+      final String id,
+      final LocalDateTime timeStamp,
+      final BigDecimal amount,
+      final String reference,
+      final String slogan,
+      final String accountId )
+   {
+      this.id = id;
+      this.timeStamp = timeStamp;
+      this.amount = amount;
+      this.reference = reference;
+      this.slogan = slogan;
+      this.accountId = accountId;
    }
 
-   public String getId() {
-      return id_;
+   public String getId()
+   {
+      return id;
    }
 
-   public LocalDateTime getTimeStamp() {
-      return timeStamp_;
+   public LocalDateTime getTimeStamp()
+   {
+      return timeStamp;
    }
 
-   public BigDecimal getAmount() {
-      return amount_;
+   public BigDecimal getAmount()
+   {
+      return amount;
    }
 
-   public String getReference() {
-      return reference_;
+   public String getReference()
+   {
+      return reference;
    }
 
-   public String getSlogan() {
-      return slogan_;
+   public String getSlogan()
+   {
+      return slogan;
+   }
+
+   public String getAccountId()
+   {
+      return accountId;
    }
 }
